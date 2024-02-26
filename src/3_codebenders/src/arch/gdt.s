@@ -1,3 +1,4 @@
+; gdt.s file
 global gdt_flush  ; GdtFlush globaly accessebel
 
 section .text
