@@ -1,3 +1,5 @@
+// Kernal.cpp file
+// Displays "Hello World!" at the top-left of the screen.
 extern "C" void kernel_main() {
     const char* startMessage = "Hello World!";
     volatile char* VideoMemory = (volatile char*)0xb8000; 

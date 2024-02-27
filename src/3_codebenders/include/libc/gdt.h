@@ -1,3 +1,4 @@
+// gdt.h file
 #include "stdint.h"
 
 // Defiend struct for GDT entrreis
