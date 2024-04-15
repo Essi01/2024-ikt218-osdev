@@ -42,14 +42,12 @@ set(CMAKE_C_STANDARD 99)
 ########################################
 set(CMAKE_ASM_NASM_SOURCE_FILE_EXTENSIONS "s;S;asm")
 if(OS_ARCH_TARGET STREQUAL "i386")
-	set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf32")
+  set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf32")
 elseif(OS_ARCH_TARGET STREQUAL "x86_64")
-	set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
+  set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
 endif()
+set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -f ${CMAKE_ASM_NASM_OBJECT_FORMAT} -o <OBJECT> <SOURCE>")
 
-# Command to compile NASM files
-set(CMAKE_ASM_NASM_COMPILE_OBJECT 
-    "<CMAKE_ASM_NASM_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -f ${CMAKE_ASM_NASM_OBJECT_FORMAT} -o <OBJECT> <SOURCE>")
 
 ########################################
 # OS Target
@@ -58,9 +56,18 @@ set(OS_KERNEL_LINKER "${CMAKE_CURRENT_SOURCE_DIR}/src/arch/${OS_ARCH_TARGET}/lin
 
 # Add executable target for the kernel
 add_executable(uiaos-kernel 
-	src/multiboot2.asm # TODO: Add multiboot2 support
-    src/kernel.c
-	src/kernel.cpp
+	src/multiboot2.asm
+	src/kernel.c 
+	src/kernel.cpp 
+	src/vga.c 
+	src/idt.c 
+	src/util.c
+	src/idt.asm
+	src/vga.c
+	src/gdt.asm
+	src/gdt.c
+	src/keyboard.c
+	src/io.c
 )
 
 # Include directories for the kernel target
@@ -78,6 +85,7 @@ target_compile_options(uiaos-kernel PRIVATE
 # Specify link options for C and C++
 target_link_options(uiaos-kernel PUBLIC
     $<$<OR:$<COMPILE_LANGUAGE:C>,$<COMPILE_LANGUAGE:CXX>>:-ffreestanding -nostdlib -fno-builtin -static -pie -O0 -T${OS_KERNEL_LINKER} -g>
+
 )
 
 

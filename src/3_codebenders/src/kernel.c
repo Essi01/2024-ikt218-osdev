@@ -1,22 +1,56 @@
-#include "libc/stdint.h"
-#include "libc/stddef.h"
-#include "libc/stdbool.h"
-#include <multiboot2.h>
+#include "vga.h"
+#include "gdt.h"
+#include "idt.h"
+#include "keyboard.h"
+#include "interrupts.h"
+#include "io.h"
+
+// ISR handlers
+void isr20_handler(void) {
+    print("Interrupt 0x20 triggered\n");
+}
+void isr21_handler(void) {
+    print("Interrupt 0x21 triggered\n");
+}
+
+void isr22_handler(void) {
+    print("Interrupt 0x22 triggered\n");
+}
+
+// Setup IDT
+void setup_idt() {
+    
+    // Set all possible interrupts to the default handler first
+    for (int i = 0; i < 256; i++) {
+        setIdtGate(i, (unsigned long)default_handler, 0x08, 0x8E);
+    }
+
+    // setIdtGate(0x20, (unsigned long)isr20_handler, 0x08, 0x8E);
+    // setIdtGate(0x21, (unsigned long)isr21_handler, 0x08, 0x8E);
+    setIdtGate(0x21, (uint32_t)isr21_handler, 0x08, 0x8E);
+    setIdtGate(0x22, (unsigned long)isr22_handler, 0x08, 0x8E);
+}
+
+// Trigger interrupts
+void trigger_interrupts() {
+    asm volatile("int $0x20");  // Trigger interrupt 0x20
+    asm volatile("int $0x21");  // Trigger interrupt 0x21
+    asm volatile("int $0x22");  // Trigger interrupt 0x22
+}
+
+// Kernel main function
+void kmain(void) {
+    print("Entering kmain...\r\n");
+    initializeGDT(); // Initialize Global Descriptor Table
+    print("GDT is initialized.\r\n");
+
+    initIdt();       // Initialize the IDT with defaults
+    setup_idt();     // Set up specific interrupt gates
+    print("IDT setup complete.\r\n");
+
+    // trigger_interrupts(); // Trigger interrupts
+
+    initKeyboard();
 
 
-
-struct multiboot_info {
-    uint32_t size;
-    uint32_t reserved;
-    struct multiboot_tag *first;
-};
-
-int kernel_main();
-
-
-int main(uint32_t magic, struct multiboot_info* mb_info_addr) {
-
-
-    // defined in kernel.cpp
-    return kernel_main();
 }

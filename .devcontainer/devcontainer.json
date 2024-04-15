@@ -59,7 +59,6 @@
 	//	"source=${localEnv:HOME}/.config/pulse,target=/home/osdev/.config/pulse,type=bind,consistency=cached"
     //],
 	
-
 	"customizations": {
 		"vscode": {
 			"extensions": [
