@@ -144,3 +144,4 @@ add_custom_target(
 	DEPENDS create-fat32-disk uiaos-kernel
 	VERBATIM
 )
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11 -ffreestanding -nostdlib -nostdinc -nostartfiles")

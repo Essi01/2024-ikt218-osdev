@@ -147,12 +147,7 @@ char* exception_messages[] = {
     "Reserved",
     "Reserved"
 };
-
 void isr_handler(struct InterruptRegisters* regs){
-    print("Interrupt Received: ");
-    print_hex(regs->int_no);  // Assuming you have a function to print numbers
-    print("\n");
-
     if (regs->int_no < 32){
         print(exception_messages[regs->int_no]);
         print("\n");
@@ -160,6 +155,7 @@ void isr_handler(struct InterruptRegisters* regs){
         for (;;);
     }
 }
+
 
 
 void *irq_routines[16] = {

@@ -3,8 +3,12 @@
 #include "util.h"
 #include "stdio.h"
 #include "keyboard.h"
-#include "interrupts.h"
-#include "vga.h"
+
+#define PIC1_COMMAND 0x20
+#define PIC1_DATA    0x21
+#define PIC_EOI      0x20
+
+
 
 bool capsOn;
 bool capsLock;
@@ -70,8 +74,14 @@ UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN,UNKNOWN
 void initKeyboard(){
     capsOn = false;
     capsLock = false;
+
+    // Command to enable IRQ1 (keyboard interrupt)
+    outPortB(PIC1_DATA, inPortB(PIC1_DATA) & ~(1 << 1));
+
     irq_install_handler(1,&keyboardHandler);
 }
+
+
 
 void keyboardHandler(struct InterruptRegisters *regs){
     char scanCode = inPortB(0x60) & 0x7F; //What key is pressed
@@ -111,13 +121,11 @@ void keyboardHandler(struct InterruptRegisters *regs){
             break;
         default:
             if (press == 0){
-                if (capsOn || capsLock){
-                    printf("%c", uppercase[(unsigned char)scanCode]);
-                }else{
-                    printf("%c", lowercase[(unsigned char)scanCode]);
-                }
-            }
-            
+                char output[2] = {0}; // Create a buffer to hold one character and null terminator
+                output[0] = capsOn || capsLock ? uppercase[(unsigned char)scanCode] : lowercase[(unsigned char)scanCode];
+                print(output); // Use the print function instead of printf
+            }  
     }
-    
+    // Signal end of interrupt to PIC
+    outPortB(PIC1_COMMAND, PIC_EOI);
 }

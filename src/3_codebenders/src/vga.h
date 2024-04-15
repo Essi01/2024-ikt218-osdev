@@ -1,7 +1,5 @@
 #pragma once
 
-#include "stdint.h"
-
 
 #define COLOR8_BLACK 0
 #define COLOR8_BLUE 1
@@ -24,11 +22,6 @@
 #define height 25
 
 void print(const char* s);
-void print_char(char c);  // Declaration of print_char function 
 void scrollUp();
 void newLine();
-void Reset(); 
-void print_hex(uint32_t n);
-void print_char(char c);
-// simple printf function that only supports %s and %x format specifiers
-void simple_printf(const char *format, ...);
+void Reset();

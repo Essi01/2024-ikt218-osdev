@@ -4,6 +4,7 @@
 #include "keyboard.h"
 #include "interrupts.h"
 #include "io.h"
+#include "stdio.h"
 
 // ISR handlers
 void isr20_handler(void) {
@@ -40,17 +41,29 @@ void trigger_interrupts() {
 
 // Kernel main function
 void kmain(void) {
-    print("Entering kmain...\r\n");
-    initializeGDT(); // Initialize Global Descriptor Table
-    print("GDT is initialized.\r\n");
+    Reset(); 
+    print("VGA Reset complete.\r\n");
 
-    initIdt();       // Initialize the IDT with defaults
-    setup_idt();     // Set up specific interrupt gates
-    print("IDT setup complete.\r\n");
+    
 
-    // trigger_interrupts(); // Trigger interrupts
+     print("Entering kmain...\r\n");
+     initializeGDT(); // Initialize Global Descriptor Table
+     print("GDT is initialized.\r\n");
+    
+     initIdt();       // Initialize the IDT with defaults
+     setup_idt();     // Set up specific interrupt gates
+     print("IDT setup complete.\r\n");
+    
+     // trigger_interrupts(); // Trigger interrupts
+    
+     initKeyboard();
 
-    initKeyboard();
-
+while (1) { /* Loop indefinitely to prevent the kernel from doing anything else */ 
+}
 
 }
+//void kmain(void) {
+//    uint16_t *vga = (uint16_t*) 0xB8000;
+//    *vga = 0x2F41; // 'A' with bright green background and white foreground
+//    while (1) {}
+//}
