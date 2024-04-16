@@ -1,18 +1,54 @@
 #include "vga.h"
+#include "stdint.h"
 #include "gdt.h"
 #include "idt.h"
 #include "keyboard.h"
 #include "interrupts.h"
 #include "io.h"
 #include "stdio.h"
+#include "timer.h"
+#include "multiboot2.h"
+#include "memory.h" 
 
+// Buffer to store scancodes
+#define BUFFER_SIZE 256
+unsigned char buffer[BUFFER_SIZE];
+int buffer_index = 0;
+
+unsigned char scancode_to_ascii[256];
+
+void init_scancode_to_ascii() {
+    scancode_to_ascii[0x1E] = 'a';
+    scancode_to_ascii[0x1F] = 's';
+    // Add the rest of the scancodes here...
+}
 // ISR handlers
-void isr20_handler(void) {
-    print("Interrupt 0x20 triggered\n");
-}
+//void isr20_handler(void) {
+//    print("Interrupt 0x20 triggered\n");
+//}
 void isr21_handler(void) {
-    print("Interrupt 0x21 triggered\n");
+    unsigned char scancode = inb(0x60);  // Read the scancode from the keyboard
+
+    // Store the scancode in the buffer
+    if (buffer_index < BUFFER_SIZE) {
+        buffer[buffer_index++] = scancode;
+    } else {
+        // Handle buffer overflow
+        // For example, you can clear the buffer or increase its size
+    }
+
+    // Translate the scancode to ASCII using the lookup table
+    unsigned char ascii = scancode_to_ascii[scancode];
+
+    // Print the ASCII character to the screen
+    char str[2] = {ascii, '\0'};
+    print(str);
+
+    // Send EOI to the PIC
+    outb(0x20, 0x20);  // Command to send EOI to the PIC
 }
+
+
 
 void isr22_handler(void) {
     print("Interrupt 0x22 triggered\n");
@@ -37,33 +73,34 @@ void trigger_interrupts() {
     asm volatile("int $0x20");  // Trigger interrupt 0x20
     asm volatile("int $0x21");  // Trigger interrupt 0x21
     asm volatile("int $0x22");  // Trigger interrupt 0x22
+
+    
 }
 
-// Kernel main function
-void kmain(void) {
-    Reset(); 
-    print("VGA Reset complete.\r\n");
 
-    
 
-     print("Entering kmain...\r\n");
-     initializeGDT(); // Initialize Global Descriptor Table
-     print("GDT is initialized.\r\n");
-    
-     initIdt();       // Initialize the IDT with defaults
-     setup_idt();     // Set up specific interrupt gates
-     print("IDT setup complete.\r\n");
-    
-     // trigger_interrupts(); // Trigger interrupts
-    
-     initKeyboard();
 
-while (1) { /* Loop indefinitely to prevent the kernel from doing anything else */ 
+
+void kmain(uint32_t magic, struct multiboot_info* bootInfo);
+
+void kmain(uint32_t magic, struct multiboot_info* bootInfo){
+    initializeGDT();
+    print("GDT is done!\r\n");
+    initIdt();
+
+    init_scancode_to_ascii();
+
+    initTimer();
+    initKeyboard();
+    print("IDT, Timer and Keyboard initialized!\r\n");
+
+    uint32_t mod1 = *(uint32_t*)(bootInfo->mods_addr + 4);
+    uint32_t physicalAllocStart = (mod1 + 0xFFF) & ~0xFFF;
+
+    initMemory(bootInfo->mem_upper * 1024, physicalAllocStart);
+    print("Memory allocation done!");
+
+    //asm volatile ("sti");
+
+    for(;;);
 }
-
-}
-//void kmain(void) {
-//    uint16_t *vga = (uint16_t*) 0xB8000;
-//    *vga = 0x2F41; // 'A' with bright green background and white foreground
-//    while (1) {}
-//}

@@ -3,10 +3,8 @@
 
 #include "stdint.h"
 
-// Writes a byte to the specified port
-void outb(uint16_t port, uint8_t val);
-
-// Reads a byte from the specified port
-uint8_t inb(uint16_t port);
+unsigned char inb(uint16_t port);
+void outb(uint16_t port, unsigned char data);
 
 #endif // IO_H
+

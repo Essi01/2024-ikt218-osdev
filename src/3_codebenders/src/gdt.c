@@ -1,5 +1,6 @@
 // gdt.c file
 #include "gdt.h"
+#include "util.h"
 
 #define GDT_SIZE 5
 

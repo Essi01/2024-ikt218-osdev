@@ -3,6 +3,9 @@
 #include "util.h"
 #include "stdio.h"
 #include "keyboard.h"
+#include "interrupts.h"
+#include "vga.h"
+#include "io.h"
 
 #define PIC1_COMMAND 0x20
 #define PIC1_DATA    0x21
@@ -78,7 +81,7 @@ void initKeyboard(){
     // Command to enable IRQ1 (keyboard interrupt)
     outPortB(PIC1_DATA, inPortB(PIC1_DATA) & ~(1 << 1));
 
-    irq_install_handler(1,&keyboardHandler);
+    irq_install_handler(1, &keyboardHandler);
 }
 
 

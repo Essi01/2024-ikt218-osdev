@@ -68,6 +68,9 @@ add_executable(uiaos-kernel
 	src/gdt.c
 	src/keyboard.c
 	src/io.c
+	src/timer.c
+	src/stdio.c
+	src/memory.c
 )
 
 # Include directories for the kernel target
