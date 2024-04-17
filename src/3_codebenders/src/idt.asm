@@ -2,6 +2,7 @@ global idt_flush
 idt_flush:
     MOV eax, [esp + 4]
     LIDT [eax]  
+    STI
     RET
 
 %macro ISR_NOERRCODE 1

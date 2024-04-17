@@ -9,6 +9,8 @@
 #include "util.h"
 #include "memory.h"
 
+
+
 void kmain(uint32_t magic, struct multiboot_info* bootInfo);
 
 void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
@@ -30,8 +32,10 @@ void kmain(uint32_t magic, struct multiboot_info* bootInfo) {
     initKeyboard();  // Initialize keyboard handling
     print("Keyboard is done!\r\n");
 
-    // Initialize memory allocation
-    
+    // Make the keyboard interrupt handler the default handler for IRQ1
+    irq_install_handler(1, &keyboardHandler);
+    print("Keyboard handler is done!\r\n");
+
     
     // Assuming memory initialization needs the module start address aligned
     uint32_t mod1 = *(uint32_t*)(bootInfo->mods_addr + 4);

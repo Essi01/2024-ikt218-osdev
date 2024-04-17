@@ -1,21 +1,17 @@
 global gdt_flush
 
 gdt_flush:
-    MOV eax, [esp+4]
-    LGDT [eax]
+    lgdt [esp+4]  ; Laster basen av GDT fra stakken
 
-    MOV eax, 0x10
-    MOV ds, ax
-    MOV es, ax
-    MOV fs, ax
-    MOV gs, ax
-    MOV ss, ax
-    JMP 0x08:.flush
+    mov ax, 0x10  ; 0x10 er offseten til data segmentet i GDT
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+;print "Global Descriptor Table initialized.\n
+;print ""
+    jmp 0x08:.flush  ; 0x08 er offseten til kode segmentet i GDT
+
 .flush:
-    RET
-
-global tss_flush
-tss_flush:
-    MOV ax, 0x2B
-    LTR ax
-    RET
+    ret
