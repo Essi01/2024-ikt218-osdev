@@ -67,7 +67,6 @@ add_executable(uiaos-kernel
 	src/gdt.asm
 	src/gdt.c
 	src/keyboard.c
-	src/io.c
 	src/timer.c
 	src/stdio.c
 	src/memory.c

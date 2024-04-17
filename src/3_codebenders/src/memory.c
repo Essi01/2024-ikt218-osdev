@@ -4,14 +4,6 @@
 #include "util.h"
 #include "memory.h"
 
-// Define CEIL_DIV if it's not defined
-#ifndef CEIL_DIV
-#define CEIL_DIV(x, y) (((x) + (y) - 1) / (y))
-#endif
-
-// Define initial_page_dir
-uint32_t initial_page_dir[1024] __attribute__((aligned(4096)));
-
 static uint32_t pageFrameMin;
 static uint32_t pageFrameMax;
 static uint32_t totalAlloc;
@@ -20,6 +12,9 @@ static uint32_t totalAlloc;
 #define NUM_PAGE_FRAMES (0x100000000 / 0x1000 / 8)
 
 uint8_t physicalMemoryBitmap[NUM_PAGE_FRAMES / 8]; //Dynamically, bit array
+
+// Define the initial page directory aligned to a 4096-byte boundary
+uint32_t initial_page_dir[1024] __attribute__((aligned(4096)));
 
 static uint32_t pageDirs[NUM_PAGES_DIRS][1024] __attribute__((aligned(4096)));
 static uint8_t pageDirUsed[NUM_PAGES_DIRS];

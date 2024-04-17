@@ -1,45 +1,43 @@
-// gdt.c file
 #include "gdt.h"
-#include "util.h"
 
-#define GDT_SIZE 5
+// Globalt definerte GDT-oppføringer og GDT-peker
+struct CustomGDTEntry gdtEntries[5];
+struct CustomGDTPtr gdtPointer;
 
-struct GDTEntry gdt[GDT_SIZE];
+// Initialiserer GDT med tilpassede oppføringer
+void InitializeCustomGDT() {
+    gdtPointer.limit = (sizeof(struct CustomGDTEntry) * 5) - 1;
+    gdtPointer.base = (uint32_t)&gdtEntries;
 
-struct GDTPointer gp;
+    // Null segment
+    ConfigureCustomGDTEntry(0, 0, 0, 0, 0);
+    // Kernel Code segment
+    ConfigureCustomGDTEntry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
+    // Kernel Data segment
+    ConfigureCustomGDTEntry(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
+    // User Code segment
+    ConfigureCustomGDTEntry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
+    // User Data segment
+    ConfigureCustomGDTEntry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
 
-void initializeGDT() {
-    
-    gp.Limit = (sizeof(struct GDTEntry) * GDT_SIZE) - 1;
-    gp.Base = (uint32_t)&gdt;
-
-  
-    setGDTEntry(0, 0, 0, 0, 0);
-  
-    setGDTEntry(1, 0, 0xFFFFFFFF, 0x9A, 0xCF);
-  
-    setGDTEntry(2, 0, 0xFFFFFFFF, 0x92, 0xCF);
-   
-    setGDTEntry(3, 0, 0xFFFFFFFF, 0xFA, 0xCF);
-   
-    setGDTEntry(4, 0, 0xFFFFFFFF, 0xF2, 0xCF);
-
-    GDTFlush((uint32_t)&gp);
+    // Kaller en ASM-funksjon for å laste den nye GDT
+    GDTFlushCustom((uint32_t)&gdtPointer);
 }
 
-void setGDTEntry(int Index, uint32_t Base, uint32_t Limit, uint8_t Access, uint8_t Granularity) {
-    gdt[Index].BaseLow = (Base & 0xFFFF);
-    gdt[Index].BaseMiddle = (Base >> 16) & 0xFF;
-    gdt[Index].BaseHigh = (Base >> 24) & 0xFF;
-    gdt[Index].LimitLow = (Limit & 0xFFFF);
-    gdt[Index].Granularity = ((Limit >> 16) & 0x0F);
-    gdt[Index].Granularity |= (Granularity & 0xF0);
-    gdt[Index].Access = Access;
+// Konfigurerer en enkelt GDT-oppføring
+void ConfigureCustomGDTEntry(int gdtIndex, uint32_t segmentBase, uint32_t segmentLimit, uint8_t segmentAccess, uint8_t segmentGranularity) {
+    gdtEntries[gdtIndex].baseLow = (segmentBase & 0xFFFF);
+    gdtEntries[gdtIndex].baseMiddle = (segmentBase >> 16) & 0xFF;
+    gdtEntries[gdtIndex].baseHigh = (segmentBase >> 24) & 0xFF;
+
+    gdtEntries[gdtIndex].limitLow = (segmentLimit & 0xFFFF);
+    gdtEntries[gdtIndex].granularity = ((segmentLimit >> 16) & 0x0F) | (segmentGranularity & 0xF0);
+    gdtEntries[gdtIndex].access = segmentAccess;
 }
 
-extern void GDTFlush(uint32_t GDTPointer){
+extern void GDTFlushCustom(uint32_t gdtPointer){
 
-    asm volatile("lgdt (%0)" : : "r" (GDTPointer));
+    asm volatile("lgdt (%0)" : : "r" (gdtPointer));
     asm volatile("mov $0x10, %ax");
     asm volatile("mov %ax, %ds");
     asm volatile("mov %ax, %es");
@@ -48,4 +46,6 @@ extern void GDTFlush(uint32_t GDTPointer){
     asm volatile("mov %ax, %ss");
     asm volatile("ljmp $0x08, $next");
     asm volatile("next:");
+
+
 }

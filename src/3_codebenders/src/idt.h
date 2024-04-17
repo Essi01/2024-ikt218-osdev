@@ -1,39 +1,30 @@
-// idt.h
-#include "util.h"
 
 
-struct InterruptRegisters{
-    uint32_t cr2;
-    uint32_t ds;
-    uint32_t edi, esi, ebp, esp, ebx, edx, ecx, eax;
-    uint32_t int_no, err_code;
-    uint32_t eip, csm, eflags, useresp, ss;
-};
 
 struct idt_entry_struct{
     uint16_t base_low;
-    uint16_t base_high;
+    uint16_t sel;
     uint8_t always0;
     uint8_t flags;
-    uint16_t sel;
-} __attribute__((packed));
+    uint16_t base_high;
+}__attribute__((packed)); 
 
 struct idt_ptr_struct{
     uint16_t limit;
     uint32_t base;
-} __attribute__((packed));
+}__attribute__((packed));
 
 void initIdt();
 void setIdtGate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags);
 
+// Forward declaration of `struct InterruptRegisters`
+struct InterruptRegisters;
+// Function prototype for irq_install_handler
+void irq_install_handler (int irq, void (*handler)(struct InterruptRegisters *r));
 
-void isr_handler(struct InterruptRegisters* regs);
-void irq_handler(struct InterruptRegisters* regs);
-
-void default_handler(void);
 
 
-// 0-31
+
 extern void isr0();
 extern void isr1();
 extern void isr2();

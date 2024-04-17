@@ -1,40 +1,32 @@
-#include "libc/stdint.h"
+#include "stdint.h"
 #include "util.h"
-#include "idt.h"
 #include "vga.h"
-#include "interrupts.h"
-#include "io.h"
-#include "keyboard.h"
+#include "idt.h"
+#include "isr.h"
 
 
-#define KEYBOARD_DATA_PORT 0x60
-
-
+extern void idt_flush(uint32_t);
 
 struct idt_entry_struct idt_entries[256];
 struct idt_ptr_struct idt_ptr;
 
-extern void idt_flush(uint32_t);
-
-
 
 void initIdt(){
-    idt_ptr.limit = sizeof(struct idt_entry_struct) * 256 -1;
-    idt_ptr.base = (uint32_t)&idt_entries;
+    idt_ptr.limit = sizeof(struct idt_entry_struct) * 256 - 1;
+    idt_ptr.base = (uint32_t) &idt_entries;
 
     memset(&idt_entries, 0, sizeof(struct idt_entry_struct) * 256);
 
-    //0x20 command and 0z21 data
-    //0xA0 command and 0xA1 data
-
-    outPortB(0x20, 0x11); // Tell the PIC to start initialization
-    outPortB(0xA0, 0x11); //          Programmable Interrupt Controller
+    //0x20 commands and 0x21 data
+    //0xA0 commands and 0xA1 data
+    outPortB(0x20, 0x11);
+    outPortB(0xA0, 0x11);
 
     outPortB(0x21, 0x20);
     outPortB(0xA1, 0x28);
 
-    outPortB(0x21, 0x04);
-    outPortB(0xA1, 0x02);
+    outPortB(0x21,0x04);
+    outPortB(0xA1,0x02);
 
     outPortB(0x21, 0x01);
     outPortB(0xA1, 0x01);
@@ -42,10 +34,10 @@ void initIdt(){
     outPortB(0x21, 0x0);
     outPortB(0xA1, 0x0);
 
-    setIdtGate(0, (uint32_t)isr0, 0x08, 0x8E);
-    setIdtGate(1, (uint32_t)isr1, 0x08, 0x8E);
-    setIdtGate(2, (uint32_t)isr2, 0x08, 0x8E);
-    setIdtGate(3, (uint32_t)isr3, 0x08, 0x8E);
+    setIdtGate(0, (uint32_t)isr0,0x08, 0x8E);
+    setIdtGate(1, (uint32_t)isr1,0x08, 0x8E);
+    setIdtGate(2, (uint32_t)isr2,0x08, 0x8E);
+    setIdtGate(3, (uint32_t)isr3,0x08, 0x8E);
     setIdtGate(4, (uint32_t)isr4, 0x08, 0x8E);
     setIdtGate(5, (uint32_t)isr5, 0x08, 0x8E);
     setIdtGate(6, (uint32_t)isr6, 0x08, 0x8E);
@@ -75,7 +67,6 @@ void initIdt(){
     setIdtGate(30, (uint32_t)isr30, 0x08, 0x8E);
     setIdtGate(31, (uint32_t)isr31, 0x08, 0x8E);
 
-    // Task 3: Interrupt Requests (IRQs) Assignment 3 ------------ IRQs
     setIdtGate(32, (uint32_t)irq0, 0x08, 0x8E);
     setIdtGate(33, (uint32_t)irq1, 0x08, 0x8E);
     setIdtGate(34, (uint32_t)irq2, 0x08, 0x8E);
@@ -92,17 +83,16 @@ void initIdt(){
     setIdtGate(45, (uint32_t)irq13, 0x08, 0x8E);
     setIdtGate(46, (uint32_t)irq14, 0x08, 0x8E);
     setIdtGate(47, (uint32_t)irq15, 0x08, 0x8E);
-    
 
-    setIdtGate(128, (uint32_t)isr128, 0x08, 0x8E); // System calls
-    setIdtGate(177, (uint32_t)isr177, 0x08, 0x8E); // System calls
+
+    setIdtGate(128, (uint32_t)isr128, 0x08, 0x8E); //System calls
+    setIdtGate(177, (uint32_t)isr177, 0x08, 0x8E); //System calls
 
     idt_flush((uint32_t)&idt_ptr);
-
-    //0x08 -> 0000 1000
-    //0x8E -> 1000 1110 
+    
 
 }
+
 void setIdtGate(uint8_t num, uint32_t base, uint16_t sel, uint8_t flags){
 
     idt_entries[num].base_low = base & 0xFFFF;
@@ -122,17 +112,17 @@ char* exception_messages[] = {
     "Out of Bounds",
     "Invalid Opcode",
     "No Coprocessor",
-    "Double Fault",
+    "Double fault",
     "Coprocessor Segment Overrun",
-    "Bad TSS", 
-    "Segment Not Present",
-    "Stack Fault",
-    "General Protection Fault",
-    "Page Fault",
+    "Bad TSS",
+    "Segment not present",
+    "Stack fault",
+    "General protection fault",
+    "Page fault",
     "Unknown Interrupt",
     "Coprocessor Fault",
-    "Alignment Check",
-    "Machine Check",
+    "Alignment Fault",
+    "Machine Check", 
     "Reserved",
     "Reserved",
     "Reserved",
@@ -147,6 +137,7 @@ char* exception_messages[] = {
     "Reserved",
     "Reserved"
 };
+
 void isr_handler(struct InterruptRegisters* regs){
     if (regs->int_no < 32){
         print(exception_messages[regs->int_no]);
@@ -156,14 +147,12 @@ void isr_handler(struct InterruptRegisters* regs){
     }
 }
 
-
-
 void *irq_routines[16] = {
     0,0,0,0,0,0,0,0,
     0,0,0,0,0,0,0,0
 };
 
-void irq_install_handler(int irq, void (*handler)(struct InterruptRegisters *)) {
+void irq_install_handler (int irq, void (*handler)(struct InterruptRegisters *r)){
     irq_routines[irq] = handler;
 }
 
@@ -171,10 +160,10 @@ void irq_uninstall_handler(int irq){
     irq_routines[irq] = 0;
 }
 
-void irq_handler(struct InterruptRegisters* regs) {
-    void (*handler)(struct InterruptRegisters* regs);
+void irq_handler(struct InterruptRegisters* regs){
+    void (*handler)(struct InterruptRegisters *regs);
 
-    handler = irq_routines[regs->int_no -32];
+    handler = irq_routines[regs->int_no - 32];
 
     if (handler){
         handler(regs);
@@ -184,10 +173,6 @@ void irq_handler(struct InterruptRegisters* regs) {
         outPortB(0xA0, 0x20);
     }
 
-    outPortB(0x20, 0x20);
+    outPortB(0x20,0x20);
 }
 
-// Assignment 3 task 2 
-void default_handler(void) {
-    print("Unhandled interrupt\n");
-}
