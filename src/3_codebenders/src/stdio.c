@@ -1,187 +1,133 @@
 #include "stdint.h"
 #include "stdio.h"
 #include "vga.h"
+#include "stdarg.h"
 
-void putc(char c){
-    print(&c);
+#define VGA_WIDTH 80
+
+void putc(char c)
+{
+    // Assuming print_char is a function that prints a single character on the screen.
+    print_char(c);
 }
 
-void puts(const char* s){
-    while (*s){
-        putc(*s);
-        s++;
+void puts(const char *s)
+{
+    while (*s)
+    {
+        putc(*s++);
     }
 }
 
-void printf(const char* fmt, ...){
-    int* argp = (int*) &fmt;
-    int state = PRINTF_STATE_START;
-    int length = PRINTF_LENGTH_START;
-    int radix = 10;
-    bool sign = false;
+static void print_number(unsigned int num, int base)
+{
+    char buffer[32];
+    char *digits = "0123456789ABCDEF";
+    int i = 0;
 
-    argp++;
-    while (*fmt){
-        switch(state){
-        case PRINTF_STATE_START:
-            if (*fmt == '%'){
-                state = PRINTF_STATE_LENGTH;
-            }else{
-                putc(*fmt);
-            }
-            break;
-        case PRINTF_STATE_LENGTH:
-            if (*fmt == 'h'){
-                length = PRINTF_LENGTH_SHORT;
-                state = PRINTF_STATE_SHORT;
-            }else if (*fmt == 'l'){
-                length = PRINTF_LENGTH_LONG;
-                state = PRINTF_STATE_LONG;
-            }else{
-                goto PRINTF_STATE_SPEC_;
-            }
-            break;
-            //hd
-        case PRINTF_STATE_SHORT:
-            if (*fmt == 'h'){
-                length = PRINTF_LENGTH_SHORT_SHORT;
-                state = PRINTF_STATE_SPEC;
-            }else{
-                goto PRINTF_STATE_SPEC_;
-            }
-            break;
+    if (num == 0)
+    {
+        putc('0');
+        return;
+    }
 
-        case PRINTF_STATE_LONG:
-            if (*fmt == 'l'){
-                    length = PRINTF_LENGTH_LONG_LONG;
-                    state = PRINTF_STATE_SPEC;
-                }else{
-                    goto PRINTF_STATE_SPEC_;
+    while (num > 0)
+    {
+        buffer[i++] = digits[num % base];
+        num /= base;
+    }
+
+    for (int j = i - 1; j >= 0; j--)
+    {
+        putc(buffer[j]);
+    }
+}
+
+void printf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+
+    while (*fmt != '\0')
+    {
+        if (*fmt == '%')
+        {
+            fmt++; // Skip the '%'
+            switch (*fmt)
+            {
+            case 'c':
+            {                                      // Character
+                char ch = (char)va_arg(args, int); // char is promoted to int
+                putc(ch);
+                break;
+            }
+            case 's':
+            { // String
+                const char *str = va_arg(args, const char *);
+                puts(str);
+                break;
+            }
+            case 'd':
+            { // Signed decimal integer
+                int num = va_arg(args, int);
+                if (num < 0)
+                {
+                    putc('-');
+                    num = -num;
                 }
-            break;
-
-        case PRINTF_STATE_SPEC:
-            PRINTF_STATE_SPEC_:
-                switch(*fmt){
-                    case 'c':
-                        putc((char)*argp);
-                        argp++;
-                        break;
-                    case 's':
-                        if (length == PRINTF_LENGTH_LONG || length == PRINTF_LENGTH_LONG_LONG){
-                            puts(*(const char **)argp);
-                            argp += 2;
-                        }else{
-                            puts(*(const char **)argp);
-                            argp++;
-                        }
-                        break;
-                    case '%':
-                        putc('%');
-                        break;
-                    case 'd':
-                    case 'i':
-                        radix = 10;
-                        sign = true;
-                        argp = printf_number(argp, length, sign, radix);
-                        break;
-                    case 'u':
-                        radix = 10;
-                        sign = false;
-                        argp = printf_number(argp, length, sign, radix);
-                        break;
-                    case 'X':
-                    case 'x':
-                    case 'p':
-                        radix = 16;
-                        sign = false;
-                        argp = printf_number(argp, length, sign, radix);
-                        break;
-                    case 'o':
-                        radix = 8;
-                        sign = false;
-                        argp = printf_number(argp, length, sign, radix);
-                        break;
-                    default:
-                        break;
-
-                }
-            state = PRINTF_STATE_START;
-            length = PRINTF_LENGTH_START;
-            radix = 10;
-            sign = false;
-            break;
+                print_number((unsigned int)num, 10);
+                break;
             }
+            case 'x':
+            { // Unsigned hex integer
+                unsigned int num = va_arg(args, unsigned int);
+                print_number(num, 16);
+                break;
+            }
+            case '%':
+            { // Literal '%'
+                putc('%');
+                break;
+            }
+            }
+        }
+        else
+        {
+            putc(*fmt);
+        }
         fmt++;
-    }    
+    }
+
+    va_end(args);
 }
 
-const char possibleChars[] = "0123456789abcdef";
+// Replace print_char with the actual function that writes a character to the VGA text mode buffer.
+void print_char(char c)
+{
+    // Assuming `vga_buffer` is a pointer to the VGA text mode buffer
+    // and `cursor_x` and `cursor_y` are the current coordinates on the screen.
+    static uint16_t *vga_buffer = (uint16_t *)0xB8000;
+    static uint16_t cursor_x = 0, cursor_y = 0;
 
-int * printf_number(int* argp, int length, bool sign, int radix){
-    char buffer[32] = "";
-    uint32_t number;
-    int number_sign = 1;
-    int pos = 0;
-
-    switch(length){
-        case PRINTF_LENGTH_SHORT_SHORT:
-        case PRINTF_LENGTH_SHORT:
-        case PRINTF_LENGTH_START:
-            if (sign){
-                int n = *argp;
-                if (n < 0){
-                    n = -n;
-                    number_sign = -1;
-                }
-                number = (uint32_t) n;
-            }else{
-                number = *(uint32_t*) argp;
-            }
-            argp++;
-            break;
-        case PRINTF_LENGTH_LONG:
-            if (sign){
-                long int n = *(long int*)argp;
-                if (n < 0){
-                    n = -n;
-                    number_sign = -1;
-                }
-                number = (uint32_t) n;
-            }else{
-                number = *(uint32_t*) argp;
-            }
-            argp += 2;
-            break;
-        case PRINTF_LENGTH_LONG_LONG:
-            if (sign){
-                long long int n = *(long long int*)argp;
-                if (n < 0){
-                    n = -n;
-                    number_sign = -1;
-                }
-                number = (uint32_t) n;
-            }else{
-                number = *(uint32_t*) argp;
-            }
-            argp += 4;
-            break;
+    switch (c)
+    {
+    case '\n': // Newline characters
+        cursor_x = 0;
+        cursor_y++;
+        break;
+    case '\r': // Carriage return
+        cursor_x = 0;
+        break;
+    default:                                                                          // Regular characters
+        vga_buffer[cursor_y * VGA_WIDTH + cursor_x] = (uint16_t)c | (uint16_t)0x0700; // VGA entry: char + color attributes
+        cursor_x++;
+        break;
     }
 
-    do{
-        uint32_t rem = number % radix;
-        number = number / radix;
-        
-        buffer[pos++] = possibleChars[rem];
-    }while (number > 0);
-
-    if (sign && number_sign < 0){
-        buffer[pos++] = '-';
+    // Implement cursor wrapping or scrolling if needed
+    if (cursor_x >= VGA_WIDTH)
+    {
+        cursor_x = 0;
+        cursor_y++;
     }
-
-    while (--pos >= 0){
-        putc(buffer[pos]);
-    }
-
-    return argp;
 }
