@@ -22,8 +22,7 @@ struct InterruptRegisters;
 // Function prototype for irq_install_handler
 void irq_install_handler (int irq, void (*handler)(struct InterruptRegisters *r));
 
-
-
+void initIdt(); // Initialize the IDT
 
 extern void isr0();
 extern void isr1();

@@ -78,40 +78,40 @@ void print(const char* s){
         s++;
     }
 }
-//void print_char(char c) {
-//    // Assuming 'vga', 'line', 'column', 'width', and 'currentColor' are properly defined elsewhere
-//    switch(c){
-//        case '\n':
-//            newLine();  // You must define this function to handle newline correctly
-//            break;
-//        case '\r':
-//            column = 0;
-//            break;
-//        case '\b':
-//            if (column == 0 && line != 0){
-//                line--;
-//                column = width;
-//            }
-//            column--;
-//            vga[line * width + column] = ' ' | currentColor;
-//            break;
-//        case '\t':
-//            if (column == width){
-//                newLine();
-//            }
-//            uint16_t tabLen = 4 - (column % 4);
-//            while (tabLen-- > 0){
-//                if (column == width) {
-//                    newLine();
-//                }
-//                vga[line * width + (column++)] = ' ' | currentColor;
-//            }
-//            break;
-//        default:
-//            if (column == width){
-//                newLine();
-//            }
-//            vga[line * width + (column++)] = c | currentColor;
-//            break;
-//    }
-//}
+void print_char(char c) {
+    // Assuming 'vga', 'line', 'column', 'width', and 'currentColor' are properly defined elsewhere
+    switch(c){
+        case '\n':
+            newLine();  // You must define this function to handle newline correctly
+            break;
+        case '\r':
+            column = 0;
+            break;
+        case '\b':
+            if (column == 0 && line != 0){
+                line--;
+                column = width;
+            }
+            column--;
+            vga[line * width + column] = ' ' | currentColor;
+            break;
+        case '\t':
+            if (column == width){
+                newLine();
+            }
+            uint16_t tabLen = 4 - (column % 4);
+            while (tabLen-- > 0){
+                if (column == width) {
+                    newLine();
+                }
+                vga[line * width + (column++)] = ' ' | currentColor;
+            }
+            break;
+        default:
+            if (column == width){
+                newLine();
+            }
+            vga[line * width + (column++)] = c | currentColor;
+            break;
+    }
+}

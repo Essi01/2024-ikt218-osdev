@@ -3,6 +3,8 @@
 #include "vga.h"
 #include "idt.h"
 #include "isr.h"
+#include "pit.h"
+#include "stdio.h"
 
 
 extern void idt_flush(uint32_t);
@@ -88,6 +90,10 @@ void initIdt(){
     setIdtGate(128, (uint32_t)isr128, 0x08, 0x8E); //System calls
     setIdtGate(177, (uint32_t)isr177, 0x08, 0x8E); //System calls
 
+    // Register ISR handlers
+    register_interrupt_handler(0, isr0);
+    register_interrupt_handler(1, isr1);
+
     idt_flush((uint32_t)&idt_ptr);
     
 
@@ -160,19 +166,43 @@ void irq_uninstall_handler(int irq){
     irq_routines[irq] = 0;
 }
 
-void irq_handler(struct InterruptRegisters* regs){
-    void (*handler)(struct InterruptRegisters *regs);
-
-    handler = irq_routines[regs->int_no - 32];
-
-    if (handler){
-        handler(regs);
+void irq_handler(struct InterruptRegisters *regs)
+{
+    // Acknowledge the interrupt to the PICs, especially if it's above 40 (slave PIC)
+    if (regs->int_no >= 40)
+    {
+        outPortB(0xA0, 0x20); // Send reset signal to the slave PIC.
     }
+    outPortB(0x20, 0x20); // Send reset signal to the master PIC.
 
-    if (regs->int_no >= 40){
-        outPortB(0xA0, 0x20);
+    // Switch statement to handle specific interrupts
+    switch (regs->int_no)
+    {
+    case 32: // IRQ0: Timer interrupt
+        pit_handler();
+        break;
+    case 33: // IRQ1: Keyboard interrupt
+        if (irq_routines[regs->int_no - 32])
+        {
+            ((void (*)(struct InterruptRegisters *))irq_routines[regs->int_no - 32])(regs);
+        }
+        else
+        {
+            printf("Unhandled keyboard interrupt: %d\n", regs->int_no);
+        }
+        break;
+    default:
+        // Default behavior for unregistered interrupts
+        if (irq_routines[regs->int_no - 32])
+        {
+            // Call the custom handler if one is registered
+            ((void (*)(struct InterruptRegisters *))irq_routines[regs->int_no - 32])(regs);
+        }
+        else
+        {
+            // Or handle the unexpected interrupt (e.g., log it)
+            printf("Unhandled interrupt: %d\n", regs->int_no);
+        }
+        break;
     }
-
-    outPortB(0x20,0x20);
 }
-
