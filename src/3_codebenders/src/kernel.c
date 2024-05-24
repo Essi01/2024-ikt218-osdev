@@ -21,6 +21,7 @@
 
 extern uint32_t end;
 
+void kernel_main(void);
 void kmain(uint32_t magic, struct multiboot_info* bootInfo);
 
 void kmain(uint32_t magic, struct multiboot_info *bootInfo)

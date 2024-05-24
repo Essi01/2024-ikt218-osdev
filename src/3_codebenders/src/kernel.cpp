@@ -7,7 +7,6 @@ extern "C"
 #include "stddef.h" // For size_t
 #include "string.h"
 #include "pit.h"
-
 #include "vga.h"
 #include "gdt.h"
 #include "idt.h"
@@ -15,11 +14,15 @@ extern "C"
 #include "multiboot2.h"
 #include "util.h"
 #include "memutils.h"
-#include "interrupts.h"
+#include "memory.h"
+#include "interrupts.h" // Include the SongPlayer header
+#include "../../3_codebenders/src/apps/song/include/song/song.h"
 }
 
 
+
 // Existing global operator delete overloads
+
 void operator delete(void *ptr) noexcept
 {
     free(ptr);
@@ -30,7 +33,12 @@ void operator delete[](void *ptr) noexcept
     free(ptr);
 }
 
-void *operator new[](size_t size)
+void* operator new[](size_t size)
+{
+    return malloc(size);
+}
+
+void *operator new(size_t size)
 {
     return malloc(size);
 }
@@ -48,37 +56,53 @@ void operator delete[](void *ptr, size_t size) noexcept
     free(ptr);
 }
 
-void kernel_print(const char *str);
-
-
-
-extern "C" int kernel_main(void);
+extern "C" int kernel_main(void); // Change return type to int
 int kernel_main()
 {
-
     int counter = 0;
 
-    // Allocate some memory using the kernel memory manager
-    // THIS IS PART OF THE ASSIGNMENT
     void *some_memory = malloc(12345);
     void *memory2 = malloc(54321);
     void *memory3 = malloc(13331);
     char *memory4 = new char[1000]();
 
-  //  init_pit();
-    asm volatile("sti"); // Enable interrupts globally
+    // External declarations if they are defined in other files
+    // extern Note music_1[];          // Ensure this is defined and accessible
+    extern uint32_t music_1_length; // If maintained, or use sizeof as shown
 
-    
-        while (true)
-        {
-            printf("[%d]: Sleeping with busy-waiting (HIGH CPU).\n", counter);
-            sleep_busy(1000);
-            printf("[%d]: Slept using busy-waiting.\n", counter++);
+    Song *songs[] = {
+        new Song({music_1, sizeof(music_1) / sizeof(Note)}),
+        new Song({music_2, sizeof(music_2) / sizeof(Note)}),
+        new Song({music_3, sizeof(music_3) / sizeof(Note)}),
+        new Song({music_4, sizeof(music_4) / sizeof(Note)}),
+        new Song({music_5, sizeof(music_5) / sizeof(Note)}),
+        new Song({music_6, sizeof(music_6) / sizeof(Note)}),
+        new Song({music_7, sizeof(music_7) / sizeof(Note)})};
 
-            printf("[%d]: Sleeping with interrupts (LOW CPU).\n", counter);
-            sleep_interrupt(1000);
-            printf("[%d]: Slept using interrupts.\n", counter++);
-        };
-    
+    uint32_t n_songs = sizeof(songs) / sizeof(Song *);
+
+    SongPlayer *player = create_song_player(); // Setup the song player
+
+    for (int count = 0; count < 1; count++)
+    { // Outer loop to run n times
+        for (uint32_t i = 0; i < n_songs; i++)
+        { // Inner loop to iterate through songs
+            printf("Playing Song...\n");
+            player->play_song(songs[i]);
+            printf("Finished playing the song.\n");
+        }
+    }
+
+    while (true)
+    {
+        printf("[%d]: Sleeping with busy-waiting (HIGH CPU).\n", counter);
+        sleep_busy(1000);
+        printf("[%d]: Slept using busy-waiting.\n", counter++);
+
+        printf("[%d]: Sleeping with interrupts (LOW CPU).\n", counter);
+        sleep_interrupt(1000);
+        printf("[%d]: Slept using interrupts.\n", counter++);
+    }
+
     return 0;
 }
