@@ -18,10 +18,10 @@
 	////////////////////////////////////
 	// UNCOMMENT to build manually
 	////////////////////////////////////
-	//"build": {
-	//	"dockerfile": "Dockerfile",
-	//	"target": "devcontainer"
-	//},
+	"build": {
+		"dockerfile": "Dockerfile",
+		"target": "devcontainer"
+	},
 
 
 	////////////////////////////////////
