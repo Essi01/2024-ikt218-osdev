@@ -1,6 +1,6 @@
 {
-    "cmake.buildDirectory": "${workspaceFolder}/build/3_codebenders",
-    "cmake.sourceDirectory": "${workspaceFolder}/src/3_codebenders",
+    "cmake.buildDirectory": "${workspaceFolder}/build/group_name",
+    "cmake.sourceDirectory": "${workspaceFolder}/src/group_name",
     "C_Cpp.errorSquiggles": "disabled",
     "files.associations": {
         "cstddef": "cpp",
@@ -14,11 +14,7 @@
         "multiboot2.h": "c",
         "interrupts.h": "c",
         "memory.h": "c",
-        "limits.h": "c",
-        "util.h": "c",
-        "gdt.h": "c",
-        "timer.h": "c",
-        "songplayer.h": "c"
+        "limits.h": "c"
     }
 
 }
