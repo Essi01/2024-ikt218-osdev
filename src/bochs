@@ -1,5 +1,0 @@
-romimage: file=/usr/local/share/bochs/BIOS-bochs-latest
-vgaromimage: file=/usr/local/share/bochs/VGABIOS-lgpl-latest
-ata0-slave: type=cdrom, path=/workspaces/2024-ikt218-osdev/src/2_TheOSGuys/kernel.iso, status=inserted
-boot:cdrom
-display_library: x, options = "gui_debug"
