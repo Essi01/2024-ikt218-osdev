@@ -13,37 +13,35 @@
 	////////////////////////////////////
 	// UNCOMMENT to use prebuilt image
 	////////////////////////////////////
-	"image": "ghcr.io/uiaict/2024-ikt218-osdev/devcontainer:0bd4640",
+	"image": "ghcr.io/uiaict/2024-ikt218-osdev/devcontainer:2776417",
 
 	////////////////////////////////////
 	// UNCOMMENT to build manually
 	////////////////////////////////////
-	"build": {
-		"dockerfile": "Dockerfile",
-		"target": "devcontainer"
-	},
+	//"build": {
+	//	"dockerfile": "Dockerfile",
+	//	"target": "devcontainer"
+	//},
 
 
 	////////////////////////////////////
 	// Linux Setup (X11)
 	////////////////////////////////////
     //"mounts": [
-    //    "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=scached"
+        //"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
     //],
 	//"containerEnv": {},
+
 
 	////////////////////////////////////
 	// Windows Setup (WSL2)
 	////////////////////////////////////
-	"mounts": [
-		"source=/mnt/wslg,target=/mnt/wslg,type=bind,consistency=cached",
-		"source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=scached"
-    ],
-	
-	"containerEnv": {
-		"PULSE_SERVER": "/mnt/wslg/PulseServer",
-		"DISPLAY": ":0"
-	},
+    //"mounts": [
+	//	"source=/mnt/wslg,target=/mnt/wslg,type=bind,consistency=cached"
+    //],
+	//"containerEnv": {
+	//	"PULSE_SERVER": "/mnt/wslg/PulseServer"
+	//},
 
 
 	////////////////////////////////////
@@ -59,6 +57,7 @@
 	//	"source=${localEnv:HOME}/.config/pulse,target=/home/osdev/.config/pulse,type=bind,consistency=cached"
     //],
 	
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
